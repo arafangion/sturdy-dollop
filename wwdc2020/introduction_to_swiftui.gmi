@@ -1,0 +1,93 @@
+# Introduction to SwiftUI
+
+This video is at Apple at:
+
+=> https://developer.apple.com/videos/play/wwdc2020/10119/
+
+## First points
+
+In the video, a multi-platform app is developed, which of course means MacOS, iOS, and iPadOS.
+
+Other than that this app is about "Sandwiches", the main points they bring up is:
+
+* XCode produces a template for this for the "Multiplatform App Template", with groups for each major target, but also a shared group.  Most code will be in the shared group.
+* SwiftUI development is written directly in code on the left, and a "preview" on the right that is updated whenever the code is modified.
+* You can see track which node is which as the corresponding code or view will be shown when you select it.
+
+The initial code is as follows:
+
+``` Initial SwiftUI code for a View called Foo.
+import SwiftUI
+
+struct Foo: View {
+    var body: some View {
+        Text("Hello, World!")
+    }
+}
+
+struct Foo_Previews: PreviewProvider {
+    static var previews: some View {
+        Foo()
+    }
+}
+```
+
+
+These Previews are implemented using a struct that implements PreviewProvider. (I do not know if this is removed at compile time from production apps).
+
+* It's important to realise that XCode is running the real code, and running it, however, these previews are written the same as the regular SwiftUI code. (Although I've noticed that using Groups results in additional Previews being shown).
+
+
+## Adding a Cell to the View
+
+It is convenient to use the "Library", refer to the top-right corner of XCode, in the below image, there are three buttons:
+
+=> ./librarybutton.png
+
+That image contains the following button, in turn:
+
+* Library (The plus sign)
+* Show or hide code review (The left/right arrows)
+* Hide or show the inspectors. (Showing the right pane)
+
+Here, we want the Library, and here I use it to find a "Cell" for insertion, which in the video turns out to be just a regular Text node:
+
+=> ./librarysearch.png
+
+Curiously, you can actually *drag* the the control right into the preview - or the code. Whichever is fine, but dragging it right into the graphical preview presents a number of really nice shortcuts.
+
+It lets you drag it in the right spot, and you have the option to arrange the new control horizontally, vertically, or to replace the current node.
+
+## SF Images
+
+SwiftUI appears to contain SF Icons, (Must link this to the SF Icons!), so it's easy to get a "sample" image by using one of them as follows:
+
+``` Using an SF Icon
+Image(systemName: "photo")
+```
+
+They can be convenient for quick mockups as well because you don't have to find and add an image icon yet.
+
+## Inspecting the view.
+
+Use Command-Click on a view - either in the code or in the preview, to display a menu that shows all sorts of actions you can do, including to show the inspector.
+
+> Pro tip: You can control-option-click to go directly to the inspector.
+
+You can also interact with the inspector and have it change the code for you as well, so together, all this makes SwiftUI really, really interactive and easy to use.
+
+Using the inspector to change the font results in XCode modifying the view like follows:
+
+``` Setting the font using a "modifier"
+Text("Hey")
+    .font(.subheadline)
+```
+
+Those methods are called "modifiers" and are used in SwiftUI to change the appearance or behaviour of that view.
+
+To re-iterate: It is definitely worth exploring the Command-Click menu because it makes it much quicker to inspect and modify the views.
+
+## Changing the Image - Dynamic Image Sizes
+
+
+=> https://developer.apple.com/videos/play/wwdc2020-10119/?time=345 Continue from this spot
