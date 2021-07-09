@@ -16,8 +16,7 @@ Other than that this app is about "Sandwiches", the main points they bring up is
 
 The initial code is as follows:
 
-``` Initial SwiftUI code for a View called Foo.
-import SwiftUI
+``` Initial SwiftUI code for a View called Foo.import SwiftUI
 
 struct Foo: View {
     var body: some View {
@@ -87,7 +86,426 @@ Those methods are called "modifiers" and are used in SwiftUI to change the appea
 
 To re-iterate: It is definitely worth exploring the Command-Click menu because it makes it much quicker to inspect and modify the views.
 
-## Changing the Image - Dynamic Image Sizes
+## Adding real images and data models
+
+Drag in some assets - literally go to the finder, and drag them into a suitable spot in the project.
+
+The model data can look like this:
+
+``` Setting up model data
+struct FooData: Identifiable {
+   var id = UUID()
+   var name: String
+   var description: String
+   var imgName: String { return name }
+   var imgThumbnail: String { return name + "Thumb" }
+}
+
+let testData = [
+    FooData(name: "leaves", description: "Just a bunch of leaves"),
+    FooData(name: "sticks", description: "Just a bunch of sticks"),
+    FooData(name: "rocks", description: "Just a bunch of rocks")
+]
+```
+
+That "Identifiable" protocol is required to be able to use it in a "List" in SwiftUI so that it can keep track of which items come and go.
+(That's referring to how SwiftUI will "diff" your data and views when doing updates)
+
+To use the testData in the code, you'll need to assign it to a property on the struct, eg, like so:
+
+``` Just adding testData to the example view
+import SwiftUI
+
+struct Foo: View {
+    var foo: [FooData]
+
+    var body: some View {
+        List(foo) { item in
+            Image(item.imgThumbnail)
+            VStack {
+                Text(item.name)
+                Text(item.description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        } 
+    }
+}
+
+struct Foo_Previews: PreviewProvider {
+    static var previews: some View {
+        Foo(fooData: testData)
+    }
+}
+```
+
+Using real images like that (which need to be in the xcassets for the project, so drag those items in), the cells expand automatically to match the size.  In this case, that means they're no-longer the standard 44-points in height for the text items, but the images are a bit "sharp" - as in, sharp corners.
+
+As a note: In SwiftUI, views size themselves to fit their content, however, we can make this expand edge-to-edge by adding spaces and an HStack like so:
+``` Showing edge-to-edge label
+HStack {
+    Spacer()
+    Label("Bushfire!", systemImage: "flame.fill")
+    Spacer()
+}
+.background(Color.red)
+```
+
+Lets make them round, the video uses the *Library* to locate the available modifiers to use - the library has about five buttons on the top - defaulting to "views" - just select the "Modifiers" button and explore.
+
+And as usual, you can grab a modifier (that applies to the cell type you're interested in), to the views or to code. In this case, since the view we want to change is inside a list, XCode will show that the modifier will apply to all the occurences in the list, which is great.
+
+## Navigation Links
+
+In order to be able to tap on cells, and navigate to a new page, we use a "NavigationView" with each tappable item in a "NavigationLink".
+
+> NavigationLinks push onto a Navigation stack.
+
+Like follows:
+
+``` Using a NavigationLink
+var body: some View {
+    NavigationView {
+        List(foo) { item in
+            NavigationLink(destination: Text("This is the target view")) {
+                Image(item.imgThumbnail)
+                VStack {
+                    Text(item.name)
+                    Text(item.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+        } 
+    }
+}
+```
+
+> Note that SwiftUI automatically updates the List so that it shows an indicator that they are now a link to another view.
+
+These work in the previews as well, so you can tap on them and see how they push and pop onto the navigation stack.
+
+## Refactoring - Extracting SubCells
+
+When the view gets a bit "big", it's good to refactor the cells to another view.
+
+> Command-Click on the view and choose "Extract Subview", and give it a name.
+
+All this then gets moved to a new View, and you'll then need to add instance variables so that it can get the data needed for drawing.
+
+> Views are very lightweight
+
+Make as many as you like!
+
+Example:
+```Example of a subview
+struct SubFooItem: View {
+    var fooItem: FooData
+
+    var body: some View {
+        Image(item.imgThumbnail)
+        VStack {
+            Text(item.name)
+            Text(item.description)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+struct Foo: View {
+    var foo: [FooData]
+
+    var body: some View {
+        List(foo) { item in
+            SubViewItem(fooItem: item)
+        } 
+    }
+}
+```
+
+## Centering Text
+
+One way to center text is to add it to an HStack, and then add two spaces around it - spacers are like a flexible space in a toolbar, expanding to fill any available space.
+
+The section in the video here is a particularly good demonstration of live-editing the view:
+
+=> https://developer.apple.com/videos/play/wwdc2020-10119/?time=767 
+
+## SwiftUI's views are really, really efficient
+
+=> https://developer.apple.com/videos/play/wwdc2020-10119/?time=1040 TODO: Summarize the efficiency discussion
+
+## UI View State
+
+Lets suppose you want to be able to "zoom in" an image when you tap on it, and to "zoom out" when you tap again. This can be done
+by using state and an action.
+
+So we need a State Variable - it allocates persistent storage for that variable on the view's behalf. (Remember: The SwiftUI view itself is transcient).
+
+``` State Variable example
+struct FooDetail: View {
+    let fooItem: Foo
+    @State private var zoomed = false
+
+    var body: some View {
+        Image(fooItem.imgName)
+            .resizable()
+            .aspectRatio(contentMode: zoomed? .fill : .fit)
+            .onTapGesture { zoomed.toggle() }
+    }
+}
+```
+
+> One of the special properties of state variables is that SwiftUI can observe when they're read and written.
+
+Whenever the variable changes, the framework is going to re-request the latest body, providing it with the new "zoomed" state.
+
+That is, "zoomed" here is different to "fooItem" because whenever fooItem changes, the framework is not aware of it, so unless it needs to request a new copy of the body, it's not going to trigger anything.  It's only when a variable such as "@State private var zoomed" changes that the framework realises it needs to update the display.
+
+That is - everything in the UI is derived from a "source of turth", and collectively, the state variables and the model are the source of truth for the application.
+
+## Source of truth
+
+> This is the mechanism by which all derived values are kept up-to-date in SwiftUI.
+
+State Variables are observed by the framework whenever they've been read or written. (They appear to be ignored if the framework learns they haven't been read to or written from!)
+
+To express this in a different way, what's happening is that the framework is working out what the view's dependancies are, in terms of state variables, and it uses this information to optimise the UI updates.
+
+The video emphasises this again and again:
+
+> SwiftUI automatically manages dependencies on your behalf, recomputing the appropriate derived values so this never happens again
+
+The intention is to avoid the UI code bugs you will frequently experience in classic imperative UI applications, because the number of interactions just explodes and there are too many interactions.
+
+A really good explaination of the problems is this direct quote from the video as follows:
+
+> If I could tell myself from five years ago one thing about my job, it would be that UI programming is hard. No one pretends synchronizing multi-threaded code is easy. It's taken me months to shake out the bugs in some of the multi-threaded code I've written. And even then, I couldn't be 100% confident in its correctness. A lot of UI code is actually just like that. I think we downplay how hard it is because it often only manifests as a view missing or in the wrong place. But we shouldn't. Race conditions and UI inconsistencies share the same underlying source of complexity – these easy-to-overlook orderings. Many of the views we all work on have to handle way more than four events. Model notifications, target-actions, delegate methods, lifecycle checkpoints, completion handlers-- they're all events. A view with 12 would roughly equate to 12 factorial possible orderings. That's almost half a billion. You can think about this as kind of like Big O notation for your brain. You're human. You can only fit so much in your head at a time. This dotted line? That's your app. What do you think the difference between these points is? That's right. Bugs. As we add features the number of possible orderings explodes, and the chance we overlook one increases to the point where bugs are inevitable.
+
+(Yeah, that's hard to read.  That's why I'm writing these notes here! Videos are painful).
+
+The answer to the quote, is to have only one entry point - and that's the SwiftUI View's "static var view: some View" property.
+
+### State
+
+Recall the state example:
+
+``` State Variable example
+struct FooDetail: View {
+    let fooItem: Foo
+    @State private var zoomed = false
+
+    var body: some View {
+        Image(fooItem.imgName)
+            .resizable()
+            .aspectRatio(contentMode: zoomed? .fill : .fit)
+            .onTapGesture { zoomed.toggle() }
+    }
+}
+```
+
+Some points:
+
+* State should always be private.
+* When adding any changes, always immediately test it in the preview.
+
+What actually happens when we tap?
+
+Because of the State variable, SwiftUI can observe when they're read and written, which allows the framework to determine the dependencies for a particular view and which view needs to be refreshed whenever one of those variables changes.
 
 
-=> https://developer.apple.com/videos/play/wwdc2020-10119/?time=345 Continue from this spot
+
+## View Layout and tweaking.
+
+Swift automatically lays things out where it's safe to display them - the "safe area".
+If this needs to be ignored, eg, because you're displaying an image that should absolutely fill the entire screen, you need to use a modifier.
+
+Again, using the library, move the modifier to the code so that it looks like this:
+
+``` With Safe Area Modifier
+var body: some View {
+    Image(fooItem.imgName)
+        .resizable()
+        .aspectRatio(contentMode: zoomed? .fill : .fit)
+        .onTapGesture { zoomed.toggle() }
+        .edgesIgnoringSafeArea(.bottom)
+}
+```
+
+Animations are insanely easy. Just wrap it up in an withAnimation:
+``` withAnimation example:
+.onTapGesture {
+    withAnimation {
+        zoomed.toggle()
+    }
+}
+```
+
+## Showing multiple views in the preview
+
+This is quite easy, specify your views (here, they are "Foo"), in a group, and Previews will use a separate "Preview Pane" for each item, as below:
+
+``` Showing multiple views in preview
+struct Foo_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            NavigationView {
+                Foo(data: testData[0])
+            }
+            NavigationView {
+                Foo(data: testData[1])
+            }
+        }
+    }
+}
+```
+
+
+## Cross Platform!
+
+(Well, yes.  In Apple's world...  That means macos, iPadOS, and iOS...)
+
+Now, the video has an example so far throughout, it consists of Navigation views and various images of sandwiches, which you can zoom in and out of, etc.
+
+However, until this point, everything has been done on an iPhone:
+
+=> https://developer.apple.com/videos/play/wwdc2020/10119/?time=2388 Time 39:50 - until this point, we've been only looking on the iPhone
+
+Lets describe what happens when the "run destination" has been swithced to an iPad:
+
+* SwiftUI converst the navigation view to a split view - so the list is on the left, with the view on the right.
+
+However, until a selection has been made, there is a blank area - we call this a placeholder.  This can be filled in by adding an second view to the navigation view.
+
+This placeholder is not shown on the iPhone.
+
+MacOS is very much the same behaviour as the iPad.
+
+## More DataBinding - making stuff mutable - Introducing ObservableObject, and the Scene
+
+Using "@State" variables helps but sometimes you want to trigger a change from outside the view - so we want to tell SwiftUI whenever the object changes so that it will update the view.
+
+For that, we can make our variable implement the "ObservableObject" protocol, then mark any properties with "@Published".  These are objects, however, not structs, so we need to use "@StateObject" instead, as for example:
+
+``` StateObject example
+@main
+struct FooApp: App {
+    @StateObject private var store = FooStore()
+
+    var body: some Scene  {
+        WindowGroup {
+            ContentView(store)
+        }
+    }
+}
+```
+
+The "@main" in the example above just means that this struct is the starting point for our application.
+The struct defines - or rather, "conforms" to the App" protocol, which has a body property, similar to all the SwiftUI views.
+
+The WindowGroup specifies which view we want for all windows in the app.
+
+We can add the @StateObject right there in the FooApp (or yes, in any other view you like, really), like shown in the example above.
+
+When we pass the store to a view, however, it needs to be an "@ObservedObject", eg like follows:
+
+``` ObservedObject example
+struct ContentView: View {
+    @ObservedObject var store: store: FooStore
+
+    var body: some View {
+        ...
+    }
+}
+```
+
+## Snippets
+
+The Library, also contains "Snippets", indicated by a symbol that looks like "[{}]" in the library toolbar.
+
+The author of this video has already set up a "Snippet" which defines a bunch of functions in the view:
+
+``` Convenience functions
+func makeFoo() {
+    withAnimation {
+        store.foos.append(Foo(name: "Ceramic"))
+    }
+}
+func moveFoo(from: IndexSet, to: Int) {
+    withAnimation {
+        store.foos.move(fromOffsets: from, toOffset: to)
+    }
+}
+func deleteFoo(offsets: IndexSet) {
+    withAnimation {
+      store.foos.remove(atOffsets: offsets)
+    }
+}
+```
+
+Snippets seem to have placeholder texts and whatnot, take a look at them and check them out.
+
+With those functions as an example, it's pretty simple to make use of the list editing modifiers:
+
+``` onMove, onDelete modfiiers:
+ForEach(store.foo) { foo in
+    FooCell(foo: foo)
+}
+.onMove(perform: moveFoo)
+.onDelete(perform: deleteFoo)
+```
+
+And with just that, you can swipe to delete rows from the list, or move to move items in the list.
+
+That's all we need for macOS, but on iOS we should add an explicit way to enter edit mode, so lets add that as a toolbar item:
+
+``` Entering onEdit mode
+.toolbar {
+    #if os(iOS)
+        EditButton()
+    #endif
+    Button("Add", action: makeFoo)
+}
+```
+
+And that's all that's needed.
+
+Everything so far in the video already supports:
+* Dynamic Type
+* Dark Mode
+* Localization
+
+Which leads to:
+
+## Localization, and user customizations
+
+To investigate these, it is ideal to add another preview inspector, then you can select the inspector and set the colour scheme to "dark", and you can change other things as well including font size
+
+=> preview_inspector.png
+
+Now, for translations, the author drags in a set of English strings files.
+
+Then selects each of those files, opens the file inspector and taps "Localize".
+
+Finally in the Project file, and imports a prepared Arabic localization from the Editor menu.
+
+Then showing this localization is done using the preview again, with the following modifiers:
+
+``` Localizing a preview.
+.environment(\.layoutDirection, .rightToLeft)
+.environment(\.locale, Locale(identifier: "ar"))
+```
+
+To make texts localizable, SwiftUI will automatically infer them from 'Text("strings")', so they should be localized by default.
+Text that's created from scrints, however - like model values, shouldbe used as-is.  And you can use string interpolations and they will also be localized correctly.
+
+## Useful Shortcuts
+
+* Command-Option-P unpauses the previews. The preview frequently pauses in response to changes to code.
+* Command-Click on a view item (either in views or code) brings up a shortcut menu.
+* Control-Option-Click on a view item (either in views or code) brings up the inspector directly
+
+## Closing
+
+> Thank you for watching and I hope you enjoy using SwiftUI as much as we do.
