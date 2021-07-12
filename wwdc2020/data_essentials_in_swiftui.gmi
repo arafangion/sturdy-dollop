@@ -1,0 +1,130 @@
+# Data Essentials in SwiftUI
+
+This video is at Apple at:
+
+=> https://developer.apple.com/videos/play/wwdc2020/10040
+
+This video uses the example of an app that represents a book they are reading.
+
+(Ie, which book, how much of it they've read, etc).
+
+# Data Flow in the SwiftUI App
+
+The video walks through writing an app that tracks how much of a book you've been reading.
+
+Whenever we implement a new View in SwiftUI, there are three key questions it needs to have resolved:
+
+* What data does it need?
+* How will the view manipulate the data?
+* Where will the data come from? (What's the Source of Truth?)
+
+For the example application, the answer to these questions for the view we're calling "BookCard", respectively, are:
+
+* Needs thumbnail of the book cover, the title, author's name, and percentage that has been read.
+* The view doesn't change the data, it just displays it.
+* Since it doesn't change the data, these can be just "let" properties - therefore, the "Source of Truth" will be somewhere higher up in the view heirachy.
+
+The superview will pass the true data whenever it instantiates a "BookCard", a new "BookCard" is instntiated every time the superview's body is instantiated, and then it is thrown away once SwiftUI has rendered it.
+
+The implementation from the video is therefore as follows:
+
+```BookCard View
+struct BookCard: View {
+    let book: Book
+    let progress: Double
+
+    var body: some View {
+        HStack {
+            BookCover(book.coverName)
+            VStack(alignment: .leading) {
+                TitleText(book.title)
+                AuthorText(book.author)
+            }
+            Spacer()
+            RingProgressView(value: progress)
+        }
+    }
+}
+```
+
+The below diagram shows how data flows inside "BookCard":
+
+=> dataflow_for_bookcard.png
+
+## Allowing progress to be recorded
+
+What we actually want is to allow the user to tap on a book, and then record the new progress, like the following Sheet presents:
+
+=> sheet_with_progress.png
+
+Lets consider the data flow for this sheet, lets consider the three main questions we need to ask ourselves, firstly:
+
+> What data does it need?
+
+It requires:
+
+* The presentation state of the sheet - a Bool.
+* The note - a String
+* The progress - a Double.
+
+We could put them directly into the view, but it is much better to extract them as out a struct called "EditorConfig" since, for the following two reasons:
+
+* Encapsulation, the new struct can maintain invariants on its properties and be tested independently.
+* And becuase it's a value type, any change to a property is visible as a change to the struct itself.
+
+Next, we need to know:
+
+> How will the view manipulate the data?
+
+We will have a button that toggles the "presentation state", and because we extract the data to a struct, we can make this EditorConfig responsible for those updates, so we will have the BookView ask the EditorConfig to do the work.
+
+> Where will the data come from?
+
+The EditorConfig is local to this view, so there isn't soem parent view that can pass it in.
+
+The Source of Truth, therefore, needs to be established: The simplest option is to use "@State"
+
+As a diagram of the new view we need to write, we have the following:
+
+=> book_view_editor.png
+
+The thick border around the orange "EditorConfig" represents state that is managed by SwiftUI.
+
+> Why is that important? The views are transcient - once rendered, they're thrown away. But the EditorConfig, because it is a Source Of Truth, remains.  Next time a view is rendered, SwiftUI will reconnect the state to the existing "storage".
+
+The code for all this is as follows:
+
+```BookView implementation
+struct EditorConfig {
+    var isEditorPresented = false
+    var note = ""
+    var progress: Double = 0
+    mutating func present(initialProgress: Double) {
+        progress = initialProgress
+        note = ""
+        isEditorPresented = true
+    }
+}
+
+struct BookView: View {
+    private var EditorConfig = EditorConfig()
+    func presentEditor() { editorConfig.present(...) }
+    var body: some View {
+        ...
+        Button(action: presentEditor) { ... }
+        ...
+    }
+}
+```
+
+## State and Binding
+
+# Designing the Data Model for the app
+
+# Integrating the Data Model into the app
+
+# Life Cycle of a SwiftUI app
+
+# How Value and Reference types interact with Data Flow
+
+

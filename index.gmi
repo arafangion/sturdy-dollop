@@ -28,4 +28,5 @@ However, the real stuff is in the WWDC Videos here:
 
 My first interest for this is SwiftUI at the moment, so that's where I will start:
 
-=> wwdc2020/introduction_to_swiftui.gmi
+=> wwdc2020/introduction_to_swiftui.gmi WWDC 2020 Introduction to SwiftUI
+=> wwdc2020/data_essentials_in_swiftui.gmi WWDC 2020 Data Essentials in SwiftUI
