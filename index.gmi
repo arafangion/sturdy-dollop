@@ -4,29 +4,27 @@ Here, I'll summarize the various videos and topics I explore.
 
 (I've been writing this in .gmi format, as follows:)
 
-=> gemini://gemini.circumlunar.space/docs/gemtext.gmi
-
 I recommend using Lagrange to view them:
 
 => https://gmi.skyjake.fi/lagrange/
 
-Starting with Apple!
-
-=> https://developer.apple.com/discover/
-
-Their developer docs page is pretty extensive, and includes:
-
-* Services. (Eg, get your membership!)
-* Lists to topics, but it's pretty market-driven
-* Books.  They do have books, though looking at the titles they seem fairly simple, but they should cover the basics.  Probably a good way to get acquanted with the tools.
-
-=> https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewFeature?id=1488012731&mt=11&ign-itsct=books_catchall_2&ign-itscg=80048
-
 However, the real stuff is in the WWDC Videos here:
 
-=> https://developer.apple.com/videos/
+=> https://developer.apple.com/videos/ Apple's Videos homepage
 
 My first interest for this is SwiftUI at the moment, so that's where I will start:
 
 => wwdc2020/introduction_to_swiftui.gmi WWDC 2020 Introduction to SwiftUI
 => wwdc2020/data_essentials_in_swiftui.gmi WWDC 2020 Data Essentials in SwiftUI
+
+Other URL's of note:
+
+=> https://developer.apple.com/discover/ Apple's home page for "discovering" developer stuff.
+
+It includes:
+
+* Services. (Eg, get your membership!)
+* Lists to topics, but it's pretty market-driven
+* Books.  They do have books, though looking at the titles they seem fairly simple, but they should cover the basics.  Probably a good way to get acquanted with the tools.
+
+=> https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewFeature?id=1488012731&mt=11&ign-itsct=books_catchall_2&ign-itscg=80048 Apple Developer books

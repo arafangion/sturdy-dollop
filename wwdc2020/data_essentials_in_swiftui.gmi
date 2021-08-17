@@ -51,7 +51,7 @@ The below diagram shows how data flows inside "BookCard":
 
 => dataflow_for_bookcard.png
 
-## Allowing progress to be recorded
+## State and Binding - Allowing progress to be recorded
 
 What we actually want is to allow the user to tap on a book, and then record the new progress, like the following Sheet presents:
 
@@ -117,13 +117,160 @@ struct BookView: View {
 }
 ```
 
-## State and Binding
+That was the BookView, which presents the editor, but now we need to focus on the BookEditor itself - again, the three questions, which we will answer as follows:
 
-# Designing the Data Model for the app
+* The BookEditor needs all the data that is in EditorConfig.
+* The BookEditor will change the data. (So it needs to be a var).
+* And the data will come from - it comes from the parent view, but it needs to be mutable, so we will use a Binding.
+
+The video has a very good explanation - first it explains why ProgressEditor's EditorConfig can't be a simple var, then it explains that it can't be a "@State" either, because that would create an additional sourse of truth.
+
+=> https://developer.apple.com/videos/play/wwdc2020-10040/?time=376 WWDC2020 - Data Essentials - Explaining why we use Binding
+
+We want the one source of truth, otherwise the values in the ProgressEditor's EditorConfig won't make it through to the parent BookView's EditorConfig.
+
+So we use a Binding.  In SwiftUI, these are indicated by using dollarsigns:
+
+``` Using a binding
+struct BookView: View {
+    @State private var editorConfig = EditorConfig()
+    var body: some View {
+        ...
+        ProgressEditor(editorConfig: $editorConfig)
+        ...
+    }
+}
+```
+
+This is an intriguing point made in the video:
+
+> The dollar sign in the call creates a Binding from the State because the projected value of the State property wrapper is a Binding.
+
+### Summary (Copied verbatim)
+
+The Binding property wrapper creates a data dependency between the ProgressEditor and the EditorConfig state in BookView. Many built in SwiftUI controls also take Bindings. For example, the new TextEditor control used for our notes takes a Binding to a String value. Using the dollar sign projected value accessor, we can get a new Binding to the note within the EditorConfig.
+
+SwiftUI lets us build a new Binding from an existing Binding. Remember, Bindings aren't just for State.
+
+# Designing the Data Model: Introducing ObservableObject
+
+> Because state is not the whole story.
+
+This section of the talk starts at:
+
+=> https://developer.apple.com/videos/play/wwdc2020-10040/?time=556 Luca starts talking about Designing the Data Model.
+
+'ObservableObject' allows managing data life cycles, including persisting it, sync'ing it, etc - and allows integrating the data model of an application with that of the UI.
+
+It implements only one property: "objectWillChange", which is a publisher, and allows you to define a new "Source Of Truth" when you implement an "ObservableObject".
+
+Luca talks about how an "ObservableObject" represents the "data dependency surface" - that is, the part of your data model that is exposed to SwiftUI, but it's not neccessarily the full data model used by the application.
+
+There are a few different possibilities:
+
+* You could have a single ObservableObject that is shared by all views in the application, which keeps it simple.
+
+=> single-shared-observedobject.png Diagram of a single observed object.
+
+* you can focus on part of the application by having multiple observed objects that give a specific projection of your data.  This works better when you have a complex data model and you want to provide a more tightly scoped 'invalidation' onto your data model.
+
+=> multiple-observedobjects.png Diagram of multiple observed objects, each exposing a different part of your data model.
+
+Luca gives the following example of using an "ObservedObject", using the book example:
+
+```
+class CurrentlyReading: ObservableObject {
+  let book: Book
+  @Published var progress: ReadingProgress
+  ...
+}
+```
+
+That is, "CurrentlyReading" represents the part of the model that is exposed to the view to present data and respond to changes.
+
+* The specific book in the example never changes, which is why it's a let.
+* However, Luca wants to have the progress updated and to have the view change to respond to it, so he uses a "Publisher".
+
+The "Three Questions" still apply:
+
+* What data does this view need to do its job?
+* How will the view manipulate the data?
+* Where will the data come from?
+
+The example above already covers the first of those questions.
 
 # Integrating the Data Model into the app
 
+To actually integrate it into the UI, SwiftUI provides the following property wrappers:
+
+* ObservedObject, used for properties that refer to an ObservableObject, but does not 'own' the reference - you are responsible for the lifetime.
+* StateObject (new in 2020), which also refers to an ObservableObject, but does 'own' the reference. (So the lifetime is managed by SwiftUI), as an example, you may have an expensive resource that should have a lifetime that is associated with that view.
+* State, which is owned and managed by SwiftUI, but it only works for value types.
+
+All these are used by SwiftUI to declare a dependency on that data by the View.
+
+> A common question is "why 'will' change? Why not 'did' change?
+
+And that's because SwiftUI needs to know what "will" change so that it can coalesce all the changes into a single update.
+
+Many SwiftUI components will accept a "Binding" to a source of truth which allows the component to read and write data whilst preserving a single "Source of truth".
+
+An example of such a component is the "Toggle", as shown:
+
+```Example showing a Toggle
+struct BookView: View {
+  @ObservedObject var currentlyReading: CurrentlyReading
+
+  var body: some View {
+    ...
+    Toggle(
+      isOn: $currentlyReading.isFinished
+    ) {
+      Label(
+        "I'm done",
+        systemImage: "checkmark.circle.fill")
+    }
+    ...
+  }
+}
+```
+
+As shown above, a Binding can be created by prefixing with a dollar sign, and allows the Toggle component to read, and write, to the source of truth.
+
 # Life Cycle of a SwiftUI app
+
+=> https://developer.apple.com/videos/play/wwdc2020-10040/?time=1152 Section of the talk where Luca beings to talk about the life cycle of the app.
+
+Very interesingly, when using a "StateObject", for example in the following code below, the variable is not instantiated when the view is created - it is instantiated instead just before the view's body is run.  So lifetime of the StateObject is very much tied to the presentation of the view.
+
+```Example showing a StateObject
+struct SomethingView: View {
+    @StateObject var something = SomethingLoader()
+
+    var body: some View { ... }
+}
+```
+
+In the above example, SomethingLoader is instantiated when the view appears, and will be removed when the view stops being shown. There is no need to fiddle with onDisappear anymore either.
+
+This is quite different to what would happen if @ObservedObject was used instead, because @ObservedObject would instantiate the property every time the view is created, and this can become slow.
+
+> Remember in SwiftUI, Views are cheap. We encourage you to make them your primary abstracting mechanism and create small views that are simple to understand and reuse.
+
+However, when you have many small and reused views, you will end up with a hierachy, and you may often find that you need to share the same ObservedObject down the heirachy, sometimes even in a distant view, even through views that don't need data.
+
+EnvironmentObject makes that easy to support.  Declare the environmentObject high up in the heirachy using a viewModifier, and then declare it as a data dependency in the specific views lower in the heirachy that need it, by using the property modifier.
+
+Luca summarizes these as:
+
+* ObservableObject describes the "data dependency surface" of your application logic.
+* @ObservedObject creates a data dependency.
+* @StateObject ties an ObservableObject to a view's life cycle.
+* @EnvironmentObject adds ergonomics to access ObservableObject.
+
+# Deep Dive into Application Livecycle with Raj.
+
+=> https://developer.apple.com/videos/play/wwdc2020-10040/?time=1353 Raj starts here with a "deep dive into the SwiftUI's lifecycle"
 
 # How Value and Reference types interact with Data Flow
 
