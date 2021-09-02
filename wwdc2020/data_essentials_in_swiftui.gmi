@@ -268,10 +268,24 @@ Luca summarizes these as:
 * @StateObject ties an ObservableObject to a view's life cycle.
 * @EnvironmentObject adds ergonomics to access ObservableObject.
 
-# Deep Dive into Application Livecycle with Raj.
+# Deep Dive into Application Livecycle with Raj
 
 => https://developer.apple.com/videos/play/wwdc2020-10040/?time=1353 Raj starts here with a "deep dive into the SwiftUI's lifecycle"
 
-# How Value and Reference types interact with Data Flow
+Understanding this helps with understanding the performance of the application.
 
+SwiftUI manages the identity and lifetime of your views, and has the following life cycle:
+
+=> swiftui_update_lifecycle.png SwiftUI update lifecycle
+
+However, if any step is slow, then performance suffers.  Some solutions:
+
+* Avoid slow updates.  Keep view initialisation cheap and keep the body a pure function.  This especially means not using "@ObservedObject".  Use "@StateObject" or others instead, because if you are instantiating the observed object each time you create the view, the view is no-longer cheap.
+* When responding to user input or other events, SwiftUI executes these closures on the main thread.  If these are slow, consider dispatching them to some other thread instead.
+
+Next is data lifetime, however the video only goes through the bit that's relevant to the application lifecycle as far as performance is concerned, tying data to Views, Scenes, and the App.
+
+However, for more on Scenes and the App, refer to "App Essentials in SwiftUI"
+
+=> app_essentials_in_swiftui.gmi App Essentials in SwiftUI
 
