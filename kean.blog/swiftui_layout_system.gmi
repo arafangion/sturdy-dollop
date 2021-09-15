@@ -1,0 +1,51 @@
+# SwiftUI Layout System
+
+Summary of the following article by Alex Grebenyk, which was last updated 2019-10-22:
+
+=> https://kean.blog/post/swiftui-layout-system
+
+The article has a very nice description of the layout system, with code examples and examples of the results as screenshots.
+
+It discusses stacks in detail, however my focus here is just the layout.
+
+Major points:
+
+* SwiftUI has an entirely new layout system, so nothing from UIKit. No legacy cruft. 
+* There is therefore no such concept as an "Ambigious layout" or an "Unsatisiable layout".
+* The top layer is "layout neutral", which apparently means that the bounds are defined by the bounds of its body (that is, it's contents).
+* Frames are utterly different to UIKit's concept.  Will discuss in a section below.
+* Parents appear to be able to respond to children's sizes, if they chose to. (Eg, as done by Stacks).
+* Some views are very firm with what size they can be, while other views will respond to what size their parent gives them.
+
+> Tip: Many views utilise the environment (eg, "@Environment(\.sizeCategory)") to further refine the view.
+
+## Layout Process
+
+1. Parent Proposes Size for Child.
+2. Child chooses its size; That is, given the parent's proposed size, the Child then chooses the size it will use.
+3. Parent places child into the parent's coordinate space, by default, in the middle.
+4. The outside edges of the views are rounded to the nearest pixel, which the blog calls "Antialiasing"
+
+## Frames
+
+Consider the example, provided by the Alex:
+
+``` Example of frames
+struct Frame: View {
+    var body: some View {
+        Image("swiftui")
+            .border(Color.red)
+            .frame(width: 80, height: 80)
+            .border(Color.blue)
+    }
+}
+```
+
+There, you'll see two borders, because what a frame actually does is create a new view, and embed that image inside it.
+This means that the image itself has a red border, but the frame sets up a new view, in this case larger than the image, and that view has a red border.
+
+It doesn't matter if the image wants to be smaller or bigger than the parent frame, the child overrules what the parent tells it - the parent can ask nicely what size it should be, but the child ultimately decides.
+
+> Tip: Make the image fill the whole area of the blue border instead by using the ".resizable()" view modifier.
+
+

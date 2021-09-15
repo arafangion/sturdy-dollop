@@ -1,0 +1,29 @@
+# Build document-based apps in SwiftUI
+
+This is a summary of the following video:
+
+=> https://developer.apple.com/videos/play/wwdc2020/10039/
+
+The talk focuses on building apps supporting "documents" in SwiftUI.
+
+## DocumentGroup
+
+```Example of a DocumentGroup
+@main
+struct TextEdit: App {
+  var body: some Scene {
+    DocumentGroup(newDocument: TextDocument()) { file in
+      TextEditor(text: file.$document.text)
+    }
+  }
+}
+```
+
+The above declares that the application supports editing documents of that type, "in place", it defines a single Scene, able to open multiple windows of that content.
+
+These apps require a bunch of info.plist settings, which I won't summarize here, however these effectively explain to the system what files they support.
+
+The TextDocument component there is an instance of a "FileDocument", which has lots of functionality but again, I won't summarize them here.
+
+And the TextEditor is just a regular View that supports the TextDocument's document.
+

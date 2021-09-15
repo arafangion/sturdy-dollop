@@ -1,0 +1,22 @@
+# Porting a phone iOS SwiftUI app to macOS
+
+Today I decided to port an app I am writing for the iPhone to macOS to see what it was like.
+
+It was surprisingly simple initially, however there are some hurdles:
+
+* UIImage doesn't exist.  Instead it seems there is Image, and NSImage.
+* NavigationView and NavigationLinks behave very very differently.  I am not sure how to handle this as yet.
+* PDFKit isn't available on macOS, which I thought was surprising!
+
+## Navigation View issues
+
+The most troubling is the NavigationView, as there is no "StackNavigationViewStyle" in macOS.  It appears that the expected behaviour is to use "Sheets".
+The following website appears to describe how to do this, however unfortunately it seems to be already out of date:
+
+=> https://betterprogramming.pub/sidebar-and-navigationview-on-macos-in-swiftui-a8b4a074a651
+
+This might be an alternative, however - to manually manage the selected content of a navigation view without actually navigating to that link as a stack:
+
+=> https://www.hackingwithswift.com/articles/216/complete-guide-to-navigationview-in-swiftui
+
+I should give their approach a go, to specify the target views I want using a tag, and basically selecting it.

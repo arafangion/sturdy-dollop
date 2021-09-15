@@ -2,12 +2,6 @@
 
 Here, I'll summarize the various videos and topics I explore.
 
-(I've been writing this in .gmi format, as follows:)
-
-I recommend using Lagrange to view them:
-
-=> https://gmi.skyjake.fi/lagrange/
-
 However, the real stuff is in the WWDC Videos here:
 
 => https://developer.apple.com/videos/ Apple's Videos homepage
@@ -16,6 +10,10 @@ My first interest for this is SwiftUI at the moment, so that's where I will star
 
 => wwdc2020/introduction_to_swiftui.gmi WWDC 2020 Introduction to SwiftUI
 => wwdc2020/data_essentials_in_swiftui.gmi WWDC 2020 Data Essentials in SwiftUI
+
+And outside of WWDC:
+=> kean.blog/swiftui_layout_system.gmi SwiftUI Layout system by Alex Grebenyk
+=> 20210912-porting-to-macos.gmi 2021-09-12 Porting iPhone app to macOS.
 
 Other URL's of note:
 

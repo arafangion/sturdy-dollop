@@ -1,0 +1,7 @@
+# Add rich graphics to your SwiftUI app
+
+This talk is a summary of the following video:
+
+=> https://developer.apple.com/videos/play/wwdc2021/10021/ Add rich graphics to your SwiftUI app
+
+
