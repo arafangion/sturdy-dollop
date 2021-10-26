@@ -4,4 +4,25 @@ This talk is a summary of the following video:
 
 => https://developer.apple.com/videos/play/wwdc2021/10021/ Add rich graphics to your SwiftUI app
 
+This video is pretty basic, however, some observatiosn in the first few minutes:
 
+* The speaker, Jacob, uses a nested VStack for his demonstration - and then changes one to a ZStack to introduce and demonstrate the ZStack.
+* The actual gradients widget that they seem to be very proud about is the "LinearGradient" view.
+
+I think the focus will be on the following:
+* Safe Area, and customizing it.
+* Foreground styles.
+* A "rich set of new materials".
+* Canvas.
+
+# Safe Area
+
+By default, SwiftUI positions everything in the safe area, so even if you don't use:
+
+```
+  .padding()
+```
+
+You'll still find your view is pushed into the safe area where there is no cropping or overlapping.
+
+Content within the safe area is automatically laid out within the appropriate insets, and takes the keyboard into consideration as well.

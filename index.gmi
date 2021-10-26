@@ -2,11 +2,10 @@
 
 Here, I'll summarize the various videos and topics I explore.
 
-However, the real stuff is in the WWDC Videos here:
-
-=> https://developer.apple.com/videos/ Apple's Videos homepage
 
 My first interest for this is SwiftUI at the moment, so that's where I will start:
+
+=> https://developer.apple.com/videos/ Apple's Videos homepage
 
 => wwdc2020/introduction_to_swiftui.gmi WWDC 2020 Introduction to SwiftUI
 => wwdc2020/data_essentials_in_swiftui.gmi WWDC 2020 Data Essentials in SwiftUI
