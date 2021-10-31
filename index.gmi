@@ -14,6 +14,9 @@ And outside of WWDC:
 => kean.blog/swiftui_layout_system.gmi SwiftUI Layout system by Alex Grebenyk
 => 20210912-porting-to-macos.gmi 2021-09-12 Porting iPhone app to macOS.
 
+And personally:
+=> personal/apple/coredata.gmi 2021-10-28 CoreData
+
 Other URL's of note:
 
 => https://developer.apple.com/discover/ Apple's home page for "discovering" developer stuff.

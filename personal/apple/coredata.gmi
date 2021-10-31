@@ -1,0 +1,223 @@
+# CoreData - Introduction
+
+There are a number of different databases that can be used to save data on an iOS device.
+
+CoreData will basically manage everything - the types, relationships, lifetimes, everything.
+
+It will also manage iCloud sync'ing on modern systems.
+
+From the CoreData Documentation, it also has the following features:
+
+* Persistence.
+* Undo and Redo of individual or batch changes, allowing the UI to provide "shake to undo".
+* Background data tasks.
+* View Synchronisation
+* Versioning and Migration
+
+It appears to be significantly improved in more recent versions of xcode and iOS SDKs, but has some quirks, mentioned near the end.
+
+# Initializing
+
+## Creating the model.
+
+Refer to the following to learn how to create the model:
+
+=> https://developer.apple.com/documentation/coredata/creating_a_core_data_model Creating a Core Data Model
+
+The CoreData model is defined in an "xcdatamodeld" file, which includes the full schema - including the types, properties, and relationships.
+
+> Note: The original name for the file is the name that XCode will use when selecting a model name for code generation.
+
+Once the model has been defined, the classes in code also need to be defined.  These are defined as part of the "Core Data Stack", described here:
+
+=> https://developer.apple.com/documentation/coredata/setting_up_a_core_data_stack Setting up a Core Data Stack
+
+To summarize that page, the classes consist of the Persistent Container (NSPersistentContainer), which manages the following:
+
+* Model (NSManagedObjectModel) - represents the above-described Model file.
+* Context (NSManagedObjectContext) - tracks changes to your app's types.
+* Store Coordinator (NSPersistentStoreCoordinator) - saves and fetches instances from the stores.
+
+It is intended that the "container" is passed to the user interface, and the above link in "Setting up a Core Data Stack" describes how you can do that.
+
+Not really mentioned here is the code generation, I just go with the defaults and generate the classes, but there is more information at:
+
+=> https://developer.apple.com/documentation/coredata/modeling_data/generating_code Generating Code
+
+## Initialising the code
+
+```Initialising CoreData using the NSPersistentCloudKitContainer
+let container = NSPersistentCloudKitContainer(name: "DatabaseModel")
+container.loadPersistentStores(completionHandler: { _, err in
+    if let err = err as NSError? {
+        fatalError("Unresolved: \(err)")
+    }
+})
+```
+
+# Creating objects
+
+Creating objects seems to be simple, here, we create an instance of a type defined in the "xcdatamodeld" Model file as "CDItem":
+
+```Creating a CDItem defined in the Model
+let item = CDItem(context: container.viewContext)
+item.searchTerms = "hey there"
+item.dataType = forType
+item.pbmessage = data
+```
+
+# Saving objects
+
+All one has to do, is save the context:
+```Saving the context
+try! container.viewContext.save()
+```
+
+# Queries
+
+Queries are done using "NSFetchRequest", and in particular, using the "NSFetchRequest.predicate" property, which is an "NSPredicate" type.
+
+"NSPredicate" is documented at:
+
+=> https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Predicates/AdditionalChapters/Introduction.html#//apple_ref/doc/uid/TP40001789 Predicate Programming Guide
+
+These are not specific to CoreData, they are a general framework for specifying queries in Cocoa, so you must take care that they work with CoreData specifically in this context, so be wary when reading NSPredicate documentations.
+
+This means that the following does not work when used with CoreData:
+
+* The matches operator doesn't work, as it uses regex.
+* Only one, one-to-many relations are supported, which means that any predicate can have only one of "ALL", "ANY", or "IN".
+* ANYKEY operator doesn't work either.
+
+The provided code example from the "Predicate Programming Guide" is as follows:
+
+```Predicate Programming Guide example of creating a Predicate
+NSPredicate *predicate = [NSPredicate
+    predicateWithFormat:@"(lastName like[cd] %@) AND (birthday > %@)",
+            lastNameSearchString, birthdaySearchDate];
+```
+
+# Performance
+
+Anecedotally, it seems that CoreData does not create indexes for each property in a coredata model, so when there are huge numbers of items, performance is a little bit slower than it should be.
+
+Unfortunately, I can't find any information about how to do indexing, and what information I have found (listed below), are obsolete and no-longer appear to be valid:
+
+=> https://artandlogic.com/2013/01/optimizing-core-data-searches-and-sorts/ artandlogic.com: Optimising Core Data Searches and Sorts
+
+# Undo/Redo
+
+The CoreData FAQ mentions that this can be achieved "for free" by implementing this on the Window Delegate:
+
+```Getting Undo for free
+func windowWillReturnUndoManager(window: NSWindow) -> NSUndoManager? {
+    return managedObjectContext!.undoManager
+}
+```
+
+# Cloudkit Integration
+
+This is very easy, see the medium article "Syncing Data on iOS devices with CoreData and CloudKit". It appears that there are only two, maybe three or four things required:
+
+1. In the model's configuration, tick "Used with CloudKit" in the item properties.
+2. In the code, use the "NSPersistentCloudKitContainer" instead of the "NSPersistentContainer"
+3. Add the correct capabilities in the XCode Project's Signing & Capabilities section
+4. And optionally enable Background Modes capabilities for background sync'ing.  For this last bit, some code is also required:
+
+```Enabling Background Mode syncing
+static var viewContext: NSManagedObjectContext {
+let viewContext = persistentContainer.viewContext
+viewContext.automaticallyMergesChangesFromParent = true
+return viewContext
+}
+```
+
+> Note: Once a container ID has been created, it can never be deleted - it will forever remain on your CloudKit Dashboard.
+
+When it's integrated, the container can be visualised in the CloudKit dashboard.
+
+# Merge Policy
+
+CoreData is used on multiple devices, and if iCloud data sync has been opted in, then there will be a need to merge data.
+
+This is described in the CoreData Change Management page.
+
+It's possible to have the same object modified at the same time on these devices.
+
+The default policy is defined by the "NSErrorMergePolicy" property, and causes a safe to fail if there is a conflict, the error's "userInfo" property is a dictionary that will contain "conflictList", which is an array of conflict records.
+
+This allows the application to present the error and conflict to the user to resolve.
+
+Alternatively, there are other policies:
+
+* NSMergeByPropertyStoreTrumpMergePolicy
+* NSMergeByPropertyObjectTrumpMergePolicy
+* NSOverwriteMergePolicy
+* NSRollbackMergePolicy
+
+# Debugging
+
+The medium article "Advanced Coredata Debug and Query" mentions that you can enable SQL tracing by launching the application with the following arguments:
+
+```Launch arguments for SQL Debugging
+-com.apple.CoreData.SQLDebug 1
+```
+
+Although CoreData is generally implemented in terms of an SQLite database, you can not create or use any of the SQLite API when interacting with the CoreData database as this is completely unsupported by Apple.
+
+# Crashes
+
+When I investigated CoreData, I ended up with a crash during large updates:
+
+```Crash
+2021-10-28 20:26:45.567260+1100 Database[8039:329888] [error] error: Serious application error.  Exception was caught during Core Data change processing.  This is usually a bug within an observer of NSManagedObjectContextObjectsDidChangeNotification.  -[__NSCFSet addObject:]: attempt to insert nil with userInfo (null)
+CoreData: error: Serious application error.  Exception was caught during Core Data change processing.  This is usually a bug within an observer of NSManagedObjectContextObjectsDidChangeNotification.  -[__NSCFSet addObject:]: attempt to insert nil with userInfo (null)
+2021-10-28 20:26:45.569700+1100 Database[8039:329888] [General] An uncaught exception was raised
+2021-10-28 20:26:45.570080+1100 Database[8039:329888] [General] -[__NSCFSet addObject:]: attempt to insert nil
+2021-10-28 20:26:45.570127+1100 Database[8039:329888] [General] (
+	0   CoreFoundation                      0x000000019098b838 __exceptionPreprocess + 240
+	1   libobjc.A.dylib                     0x00000001906b50a8 objc_exception_throw + 60
+	2   CoreFoundation                      0x0000000190a576f8 -[__NSCFString characterAtIndex:].cold.1 + 0
+```
+
+It appears that in my code, I was not paying attention to the thread.  This brings us to the Concurrency topic:
+
+In addition, most errors appear to be runtime errors; you can't catch them easily.
+
+# Concurrency and Multithreading
+
+The core data context can only be used within the thread it was created in, there are two concurrency types:
+
+* NSMainQueueConcurrencyType - for the main application UI, and can only be used on the main thread, and
+* NSPrivateQueueConcurrencyType - which creates its own queue when initialised, and can then only be used on that thread.
+
+To quote the "Core Data, Multithreading, and the Main Thread" article:
+
+> When you are using an NSPersistentContainer, the viewContext property is configured as a NSMainQueueConcurrencyType context and the contexts associated with performBackgroundTask: and newBackgroundContext are configured as NSPrivateQueueConcurrencyType
+
+In addition, the "NSManagedObject", which is the type for all your CoreData types, is not intended to be passed between queues - doing so can result in corruption or crashes.
+
+# Quirks and irritations
+
+In no particular order:
+
+* Doesn't seem to search properly for empty strings.
+* Very sensitive to which thread is being used, and the language/compiler can't help ensure that it is correct.
+* Setting up indexes seems quirky - apparently it can be done, but can't find up to date docs for this.
+* If the database is large, and the main thread is being used, then the UI can become choppy if there is lots of processing needed.
+* Data types are objects, not structs, and 'attributes' can be nills.
+* Can't lean on the language/compiler to avoid runtime crashes.
+
+# References
+
+=> https://developer.apple.com/documentation/coredata CoreData Documentation
+=> https://developer-rno.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/FrequentlyAskedQuestions.html CoreData FAQ
+=> https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/ChangeManagement.html#//apple_ref/doc/uid/TP40001075-CH22-SW1 CoreData Change Management
+=> https://medium.com/hoursofoperation/advanced-coredata-debug-and-query-the-underlying-sqlite-data-683b27663d8c Advanced Coredata Debug and Query
+=> https://medium.com/apple-developer-academy-federico-ii/syncing-data-on-ios-devices-with-coredata-and-cloudkit-bed296fc26e0 Syncing Data on iOS devices with CoreData and CloudKit
+=> https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/Concurrency.html Core Data, Multithreading, and the Main Thread
+=> https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Predicates/AdditionalChapters/Introduction.html#//apple_ref/doc/uid/TP40001789 Predicate Programming Guide
+
+In addition, the following may be helpful, but weren't used as a reference:
+
+=> https://developer.apple.com/videos/play/wwdc2017/210/ What's New in Core Data (Mainly about Core Spotlight, and indexing)
