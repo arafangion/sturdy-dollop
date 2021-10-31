@@ -105,6 +105,12 @@ Unfortunately, I can't find any information about how to do indexing, and what i
 
 => https://artandlogic.com/2013/01/optimizing-core-data-searches-and-sorts/ artandlogic.com: Optimising Core Data Searches and Sorts
 
+As an update, I've since realised that the XCode "editor" menu shows additional actions that can be done that are not obvious in the main xcode view nor the 'info' view for the event, and there, it appears that an index can be created however I'm not sure how to use these indexes as yet.  Naively creating one does not result in an SQLite Index, and it does not appear to be used by default with NSPredicate searches.
+
+My feeling is that CoreData will probably create and manage indexes for you more or less automatically once you model your data appropriately, however in my test application I have one simple type and there are no relations - if I was making real use of CoreData, I should create a variety of entities that properly represent the data I am storing, with relationships defined, and CoreData would then probably set up the appropriate indexes.
+(In addition, I'm not even using the CoreData object identifiers properly - I'm using my own "identifier" attribute, which is again probably not what Core Data is expecting.)
+
+
 # Undo/Redo
 
 The CoreData FAQ mentions that this can be achieved "for free" by implementing this on the Window Delegate:
@@ -196,6 +202,24 @@ To quote the "Core Data, Multithreading, and the Main Thread" article:
 > When you are using an NSPersistentContainer, the viewContext property is configured as a NSMainQueueConcurrencyType context and the contexts associated with performBackgroundTask: and newBackgroundContext are configured as NSPrivateQueueConcurrencyType
 
 In addition, the "NSManagedObject", which is the type for all your CoreData types, is not intended to be passed between queues - doing so can result in corruption or crashes.
+
+Here is how I set up my 'moc' when using private queue concurrency:
+```Private Queue Concurrency
+private lazy var moc: NSManagedObjectContext = {
+        let moc = NSManagedObjectContext(concurrencyType: NSManagedObjectContextConcurrencyType.privateQueueConcurrencyType)
+        moc.parent = container.viewContext
+        
+        return moc
+    }()
+```
+
+You can then use that by using:
+
+```Using the moc
+moc.perform {
+    ...  Do your stuff with Core Data ...
+}
+```
 
 # Quirks and irritations
 
