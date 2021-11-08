@@ -245,3 +245,8 @@ In no particular order:
 In addition, the following may be helpful, but weren't used as a reference:
 
 => https://developer.apple.com/videos/play/wwdc2017/210/ What's New in Core Data (Mainly about Core Spotlight, and indexing)
+
+# TODO
+
+* coredata has 'coordinators', does it?
+* Link in, and investigate, some existing coredata uses in github.
