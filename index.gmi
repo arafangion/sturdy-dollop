@@ -16,6 +16,7 @@ And outside of WWDC:
 
 And personally:
 => personal/apple/coredata.gmi 2021-10-28 CoreData
+=> personal/linux/geminiserver.gmi 2021-11-16 Gemini Server
 
 Other URL's of note:
 

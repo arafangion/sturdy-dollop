@@ -1,0 +1,106 @@
+# Setting up a gemini server
+
+For security reasons, I stopped running a gemini server on my main PC, and opted instead to use an old Raspberry Pi 3 I had found instead.
+
+The idea is that this server would contain only non-critical files that aren't a huge deal if they were to be leaked online.
+
+Security measures that I hope to implement are:
+
+* A distro with a small attack surface.  Ie, I picked Alpine for this reason.
+* sandbox the service using bubblewrap.
+* rsync-based deployment, as opposed to any server-triggered script.
+
+The outcome is that this is, hopefully, slightly more secure than a typical gemini server hosted on a home PC.
+
+# Installing Alpine
+
+I installed the aarch64 version, but I had to figure out how to install this without a keyboard or display connected at all.
+It turns out this is quite well documented on the wiki.
+
+I knew that this system supported aarch64 because my board is the "B+" version, previous models are probably not going to support aarch64.
+
+=> https://alpinelinux.org/downloads/ Downloads for aarch64
+=> https://wiki.alpinelinux.org/wiki/Raspberry_Pi_-_Headless_Installation Raspberry Pi Headless Installation
+
+Set up a root account with a secure password.
+
+Then of course, set up a "gemini" server account and an admin account. We will use these to actually run the service later.
+
+# Installing rsync
+
+This is... Remarkably trivial:
+
+```Installing rsync
+apk add rsync
+```
+
+# Installing bubblerwrap
+
+Again, very simple.  I like alpine!
+
+```Installing bubblewrap
+apk add bubblewrap
+```
+
+Using it is pretty simple, but one gotcha is that the program interpreter must exist, so in alpine, that means ensuring that `/lib` exists.
+
+Example:
+```Example of using bubblewrap
+bwrap --unshare-all --ro-bind /lib /lib --ro-bind /bin /bin ash
+```
+
+Another example is provided by "ericonr" at:
+
+=> https://github.com/ericonr/ericonr-gemini/blob/main/host.sh ericonr's example of running gemini in bubblewrap
+
+# Configuring ssh
+
+ssh is *constantly* being attacked on the internet, so it is sensible to lock it down tight, by editing /etc/ssh/sshd_config
+
+* Set up the .ssh/authorized_keys file.
+* Disable sftp subsystem
+* And obviously, set 'PasswordAuthentication' to 'no'
+
+# Configuring a build environment
+
+This is less trivial, we ideally don't want the build system installed on the rpi system.
+
+For Go, this is very very simple:
+
+```Cross compile a go package
+env GOOS=linux GOARCH=arm64 go build
+```
+
+For haskell, this is far less simple. We need to set up an arm64 emulator and install haskell in there.
+
+# Starting the gemini server:
+
+Writing an init system service is documented here for alpine linux:
+
+=> https://wiki.alpinelinux.org/wiki/Writing_Init_Scripts Writing Init Scripts
+
+And even better, the authoritative docsa are at:
+
+=> https://github.com/OpenRC/openrc/blob/master/service-script-guide.md OpenRC service script guide.
+
+With that in mind, the following seems sensible:
+
+```RC Script for Gemini:
+#!/sbin/openrc-run
+
+command=/usr/bin/bwrap
+command_args="--unshare-all --share-net--ro-bind /home/gemadmin/bin /bin --ro-bind /home/gemadmin/certs /certs --ro-bind /home/gemadmin/public /public /bin/gmifs -cert /certs/cert.pem -key /certs/key -root /public"
+pidfile="/var/run/${RC_SVCNAME}.pid"
+command_background=true
+command_user="gemini:gemini"
+```
+
+In general, everything is owned by gemadmin, but run by gemini, to try and keep the privilages as separate as possible.
+
+The user running bwrap and gmifs is gemini, gemadmin is never used by the service.
+
+(We use gemadmin to set up the files, etc, though, but not for running anything).
+
+# Other resources
+
+=> https://madaidans-insecurities.github.io/guides/linux-hardening.html Linux Hardening Guide
