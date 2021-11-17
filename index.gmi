@@ -17,6 +17,7 @@ And outside of WWDC:
 And personally:
 => personal/apple/coredata.gmi 2021-10-28 CoreData
 => personal/linux/geminiserver.gmi 2021-11-16 Gemini Server
+=> personal/linux/creating-virtual-machine.gmi Creating a virtual machine (incomplete page)
 
 Other URL's of note:
 

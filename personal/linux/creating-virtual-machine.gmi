@@ -1,0 +1,56 @@
+# Creating a virtual machine using libvirt
+
+libvirt is a general interface for virtualisation on linux; these are some notes I made when creating and loading an alpine linux vm on the command line.
+
+Obviously, you'll want to download the installation media, I've picked alpine linux for this:
+
+```Obtaining the install media for alpine linux
+wget https://dl-cdn.alpinelinux.org/alpine/v3.14/releases/x86_64/alpine-standard-3.14.3-x86_64.iso
+wget https://dl-cdn.alpinelinux.org/alpine/v3.14/releases/x86_64/alpine-virt-3.14.3-x86_64.iso
+```
+
+Pick the version you need - the 'virt' one enables serial by default and so is the one we will use.
+
+Two important commands to use:
+
+* virt-install actually does the installations and setting up the vm.
+* virsh is the command line interface for everything else.
+* osinfo-query, to help pick a suitable OS type for virt-install
+* virt-viewer to sort out the display for the vm, though it does not appear to actually be used on the command line.
+
+virt-install likes to know the type of OS we are installing, so lets find out:
+
+```Queryhing the OS's that libvirt supports and knows about
+osinfo-query os | less
+```
+
+"alpinelinux3.8" seems to be closest to the 3.14, so lets use that.
+
+Command I'm using to create the VM is therefore as follows:
+
+```Creating the VM
+virt-install --memory 8000 --os-variant alpinelinux3.8 --cdrom alpine-virt-3.14.3-x86_64.iso --disk none --display none \
+  --disk path=alpine.qcow2,size=20,format=qcow2
+```
+
+Note that every time you run the above command, a running instance will generally be added to the VM list, which libvirt describes as "running domains"
+
+# Listing VM's
+
+```Listing VM's
+virsh list
+```
+
+# Deleting VM's
+
+First, obtain the domain name from the vm list, then undefine it
+
+```Deleting VM's
+virsh undefine NAME
+```
+
+# Reconnecting to a VM's serial console
+
+```Connecting to a VM's serial console
+virsh console ID
+```
