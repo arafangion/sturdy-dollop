@@ -89,8 +89,10 @@ With that in mind, the following seems sensible:
 #!/sbin/openrc-run
 
 command=/usr/bin/bwrap
-command_args="--unshare-all --share-net --ro-bind /home/gemadmin/bin /bin --ro-bind /home/gemadmin/certs /certs --ro-bind /home/gemadmin/public /public /bin/gmifs -cert /certs/cert.pem -key /certs/key -root /public"
+command_args="--unshare-all --share-net --ro-bind /home/gemadmin/bin /bin --ro-bind /home/gemadmin/certs /certs --ro-bind /home/gemadmin/public /public /bin/gmifs -cert /certs/cert.pem -key /certs/key.rsa
 pidfile="/var/run/${RC_SVCNAME}.pid"
+output_log="/var/log/${RC_SVCNAME}"
+error_log="/var/log/${RC_SVCNAME}.error"
 command_background=true
 command_user="gemini:gemini"
 ```
