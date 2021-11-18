@@ -99,6 +99,8 @@ command_user="gemini:gemini"
 
 In general, everything is owned by gemadmin, but run by gemini, to try and keep the privilages as separate as possible.
 
+The logs do need to be owned by "gemini:gemini"
+
 The user running bwrap and gmifs is gemini, gemadmin is never used by the service.
 
 (We use gemadmin to set up the files, etc, though, but not for running anything).
