@@ -2,8 +2,12 @@
 
 Here, I'll summarize the various videos and topics I explore.
 
+# Personal pages
+=> personal/linux/geminiserver.gmi 2021-11-16 Gemini Server
+=> personal/linux/creating-virtual-machine.gmi 2021-11-17 Creating a virtual machine (incomplete page)
 
-My first interest for this is SwiftUI at the moment, so that's where I will start:
+
+# Apple
 
 => https://developer.apple.com/videos/ Apple's Videos homepage
 
@@ -14,12 +18,9 @@ And outside of WWDC:
 => kean.blog/swiftui_layout_system.gmi SwiftUI Layout system by Alex Grebenyk
 => 20210912-porting-to-macos.gmi 2021-09-12 Porting iPhone app to macOS.
 
-And personally:
-=> personal/apple/coredata.gmi 2021-10-28 CoreData
-=> personal/linux/geminiserver.gmi 2021-11-16 Gemini Server
-=> personal/linux/creating-virtual-machine.gmi Creating a virtual machine (incomplete page)
+=> personal/apple/coredata.gmi 2021-10-28 CoreData, an investigation
 
-Other URL's of note:
+## Other URL's of note:
 
 => https://developer.apple.com/discover/ Apple's home page for "discovering" developer stuff.
 
@@ -30,3 +31,9 @@ It includes:
 * Books.  They do have books, though looking at the titles they seem fairly simple, but they should cover the basics.  Probably a good way to get acquanted with the tools.
 
 => https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewFeature?id=1488012731&mt=11&ign-itsct=books_catchall_2&ign-itscg=80048 Apple Developer books
+
+# Incomplete
+
+=> wwdc2021/add_rich_graphics_to_your_swiftui_app.gmi Add rich graphics to your swiftui app
+=> wwdc2020/build_document_based_apps_in_swiftui.gmi Build document based apps in swiftui
+
