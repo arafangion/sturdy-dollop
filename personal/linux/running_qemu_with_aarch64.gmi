@@ -1,0 +1,48 @@
+# My attempt of emulating RPI3
+
+A short time ago I was setting up my rpi3 for running gemini, however, I wanted to be able to build
+my own (custom!) gemini server instead of using gmifs.
+
+=> personal/linux/geminiserver.gmi
+
+However, I want to use Haskell and Haskell is notoriously difficult to set up as a cross compilation
+build since the rpi3 system, running Alpine Linux, is neither a glibc-based system, nor is it an x86
+system.
+
+So I looked at setting up an emulator to run this.  It did not go well, particularly as I basically do not have any idea of what I am doing!
+
+First, I looked at running a regular old virtual machine, which was successful:
+
+=> personal/linux/creating-virtual-machine.gmi 2021-11-17 Creating a virtual machine
+
+In order to run rpi3 applications in such a machine, however, it has to run ARM64 instructions, which means emulation.
+
+I looked at the qemu website, and they have lots of documentation:
+
+=> https://www.qemu.org/docs/master/system/index.html
+
+I looked first at "Quick Start", then "Invocation" and "Arm System emulator", and concluded that the command I would need was as follows:
+
+```qemu command for emulating aarm64:
+qemu-system-aarch64 -M virt alpine-virt-3.14.3-aarch64.iso -display curses -cpu cortex-a72
+```
+
+It didn't work for many deeply technical reasons, including: There's no text display support since arm64 systems don't support a BIOS, there's no efi parameters provided, etcetera.  I spent a long time discussing this on IRC until eventually, someone suggested I try UTM.
+
+Now, I wanted to run this on my headless desktop, but given that this was looking to be a complex and difficult task, and since I do happen to have an arm64-capable system (my macos M1 laptop!), I figured I'd give that a go as it would still allow me to compile applications for the rpi.
+
+UTM worked *perfectly*, and could not have been easier.
+
+=> https://mac.getutm.app Get UTM app
+
+Apparently it's an open-source app, too, which is nice!
+
+I'll set up my haskell project for it another day...
+
+# Addendum
+
+"minimal" in the alpine linux channel on IRC has pointed out his page:
+
+=> https://github.com/dermotbradley/create-alpine-disk-image/blob/main/Virtual/QEMU.md
+
+Which looks like has the full commands I needed - they are huge!  I should check them out next time.
