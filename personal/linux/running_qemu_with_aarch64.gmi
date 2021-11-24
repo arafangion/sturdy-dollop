@@ -3,7 +3,7 @@
 A short time ago I was setting up my rpi3 for running gemini, however, I wanted to be able to build
 my own (custom!) gemini server instead of using gmifs.
 
-=> personal/linux/geminiserver.gmi
+=> personal/linux/geminiserver.gmi 2021-11-16 Gemini Server
 
 However, I want to use Haskell and Haskell is notoriously difficult to set up as a cross compilation
 build since the rpi3 system, running Alpine Linux, is neither a glibc-based system, nor is it an x86
@@ -27,7 +27,8 @@ I looked first at "Quick Start", then "Invocation" and "Arm System emulator", an
 qemu-system-aarch64 -M virt alpine-virt-3.14.3-aarch64.iso -display curses -cpu cortex-a72
 ```
 
-It didn't work for many deeply technical reasons, including: There's no text display support since arm64 systems don't support a BIOS, there's no efi parameters provided, etcetera.  I spent a long time discussing this on IRC until eventually, someone suggested I try UTM.
+It didn't work for many deeply technical reasons, including: There's no text display support since arm64 systems don't support a BIOS, there's no efi parameters provided, I needed 'virt' even though I was specifically not doing virtualisation, but emulation, etcetera.  I spent a long time discussing this on IRC until eventually, someone suggested I try UTM.
+
 
 Now, I wanted to run this on my headless desktop, but given that this was looking to be a complex and difficult task, and since I do happen to have an arm64-capable system (my macos M1 laptop!), I figured I'd give that a go as it would still allow me to compile applications for the rpi.
 
