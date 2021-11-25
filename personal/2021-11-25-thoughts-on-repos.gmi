@@ -1,0 +1,41 @@
+I've been thinking about how to organise one's personal side projects and repos, the vast majority that never become public.
+
+I have a whole bunch of scattered projects, in various states. Some build. Some don't. Many are forgotten, and some should just be deleted.
+
+There are a few problems I'd like to solve:
+
+1. I'm a language polyglot - I flit from language and framework so many times.  I forget how to build a particular project.  And some are quite obscure these days. (Does anyone have Quickbasic code they've written in the past few years?)
+2. I would like to be able to hit "build everything I've got", but dependency management can get complex.
+3. If I update my tooling, I'd like to know what I've got that now breaks as a result, which gives me a chance to wind back my changes.
+
+I've considered Nix for this, it seems intended for this, it has the following good points.
+
+1. It allows multiple versions of the build tools to be installed simultaniously, and effectively sandboxes each project, from a dev point of view. (Not from a security point of view).
+2. It has a configuration language (a full blown language, really), that seems well designed for it's purpose.
+3. And is used quite effectively for this purpose by major projects (NixOS, and various personal projects such as "ghuntley"'s repo)
+
+However, I find Nix very complex to learn, the language isnt' so bad, but I often get hung up with trying to figure out the "right" way to do it as there is not much in the way of suggested workflows.
+Also, every language ecosystem has their own peculiar way of using it - eg, Haskell has one particular way of using nix, Python another, and so on.  It is in that respect rather "too" flexible and I often get bogged down in trying to understand a subtle point.
+
+Nix additionally only meaningfully supports very limited systems - I am not sure I want to consider working with Nix if I were to switch over to freebsd, as an example, nor would I particularly want to use it in windows.
+
+I'm using macOS currently, but I also tend to switch from system to system every couple of years. In a few years it might be back to linux for me, or maybe I'll even give a BSD a go!
+
+So I'm considering Shake.
+
+Shake is written in Haskell, which does mean that this will only work on systems that Haskell has been ported to, however I do doubt I'll be switching to a system that does not support Haskell at all.
+
+The most problematic system I have today, is my RPi that runs Alpine Linux.  Alpine Linux does not (yet?) have a build of Haskell, however, it is possible to cross compile from Haskell to it - something I have not done yet, however, once cross compiled I would also have the shake system on that, so that would work.  I am not intending to use the RPi as my development system, however, so I feel this is a minor point.
+
+So, with Shake, my strategy is as follows:
+
+1. Define a "monorepo". Not actually putting all the code in the repo, but I might use submodules, or keep doing what I am doing currently where I 'simply' use the projects checked out besides the current monorepo. (Ie, my blog is at "../blog").
+2. Check out any projects that i haven't yet checked out, just to simplify the build rules.
+3. Define a "psuedo target" that "just does a boring build" for each of these projects.
+4. Eventually, I guess, I'll define a "./bin" or "./lib" or whatnot that will ultimately make good use of shake's build to produce those targets.
+
+And that's it right now.  It's probably not actually making good use of Shake's capabilities, but it does seem to give a nice structure.
+
+# References
+
+=> https://github.com/ghuntley/ghuntley GHuntley's personal monorepo

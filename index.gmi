@@ -3,6 +3,8 @@
 Here, I'll summarize the various videos and topics I explore.
 
 # Personal pages
+
+=> personal/2021-11-25-thoughts-on-repos.gmi 2021-11-25 Moving towards Shake
 => personal/linux/geminiserver.gmi 2021-11-16 Gemini Server
 => personal/linux/creating-virtual-machine.gmi 2021-11-17 Creating a virtual machine (incomplete page)
 => personal/linux/running_qemu_with_aarch64.gmi 2021-11-20 Attempting to create an ARM64 image.
