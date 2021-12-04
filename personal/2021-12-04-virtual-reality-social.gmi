@@ -1,0 +1,11 @@
+# Virtual Realty
+
+With some trepidition, I've bought an Oculus Quest 2, which will be a very interesting exploration of this new world.  Well, it's ordered, hasn't arrived yet.
+
+Apparently people are meeting up online using this in order to chat in Sign Language, which will be very interesting, so I'm curious to see how that works.
+
+Lots of serious misgivings about the state of the industry - the best (and only) option for us in Australia seems to be Oculus, which is Facebook owned, and I don't particularly relish the idea of everything I do being monitored for targeted advertising.  Lets see.
+
+There's a bunch of SDK's though for us developers, which might be interesting - worth investigating and seeing what the possibilities are there so I had best dive in!
+
+

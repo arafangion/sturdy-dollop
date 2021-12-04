@@ -4,6 +4,7 @@ Here, I'll summarize the various videos and topics I explore.
 
 # Personal pages
 
+=> personal/2021-12-04-virtual-reality-social.gmi 2021-12-04 Virtual Reality
 => personal/2021-11-26-generating-certs.gmi 2021-11-26 Generating Certs
 => personal/2021-11-25-thoughts-on-repos.gmi 2021-11-25 Moving towards Shake
 => personal/linux/geminiserver.gmi 2021-11-16 Gemini Server
