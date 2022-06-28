@@ -73,6 +73,8 @@ env GOOS=linux GOARCH=arm64 go build
 
 For haskell, this is far less simple. We need to set up an arm64 emulator and install haskell in there.
 
+Update: Actually setting up haskell on an aarch64 musl based linux system is non-trivial.
+
 # Starting the gemini server:
 
 Writing an init system service is documented here for alpine linux:

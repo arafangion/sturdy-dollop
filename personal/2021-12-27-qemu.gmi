@@ -1,0 +1,9 @@
+Short and sweet, this one!
+
+Managed to get VRChat running at MORE than 11 FPS by using this command to run windows 8.1:
+
+```
+qemu-system-x86_64 -drive file=win8.raw,format=raw -m 16G -display vnc=:0,password=on -monitor stdio -netdev user,id=n0 -device rtl8139,netdev=n0 -vga std -enable-kvm -usbdevice tablet -display sdl,gl=on -smp cores=12 -device nec-usb-xhci
+```
+
+However, windows will then default to 1024x768 resolution, which is still too high considering that this is going to be doing all the 3D in software.  Force it to use 800x600 by going to the display properties and then going into "advanced" - then finally select the specific mode you need!

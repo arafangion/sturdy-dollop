@@ -1,0 +1,201 @@
+# Virtualisation - Linux and MacOS
+
+When I learned about this in WWDC 2022, I immediately considered the following use cases:
+
+* Allowing us to run x86 windows and linux on M1 laptops, without Qemu.
+* Allowing us to create a snapshot of a particular build environment including xcode, the iOS simulators, and the like.
+* Allowing us to define a particular clean environment for continious integration builds.
+* And allowing us to configure the resulting machines programmatically?
+
+The video for this is at:
+
+=> https://developer.apple.com/wwdc22/10002 Create macOS or Linux virtual machines
+
+# Basic observances
+
+* Appears to allow us to run these machines with a full GUI, ie, not exactly like docker; we have a GUI.
+* They're avoiding the topic of windows.
+
+# Components of the stack
+
+* Hardware - takes advantage of Apple's particular hardware.
+* Software - takes advantage of Apple's kernel. All built-in
+* Hypervisor framework.
+* Virtualisation framework.
+* And finally - either macOS on apple silicon, or linux on Apple silicon and intel.
+
+The video focuses on the virtualisation framework, and requires that we create a "Virtual machine', with a particular configuration.
+
+Apple has provided a simple GUI for this, which is similar to the app store website when we order a new mac.
+
+* Or have they? It rather appears that they use the 'purchasing a mac' as a metaphore instead.
+
+# Generic virtual machine configuration
+
+It appears that the configuration is done in Swift:
+
+```
+var configuration = VZVirtualMachineConfiguration()
+configuration.cpuCount = 4
+configuration.memorySize = ( 4 * 1024 * 1024 * 1024 ) as UInt64
+configuration.storageDevices = [newBlockDevice()]
+configuration.pointingDevices = [newPointingDevice()]
+
+let virtualiMachine = VZVirtualMachine(configuration: configuration)
+try await virtualMachine.start()
+
+let virtualMachineView = VZVirtualMachineView()
+virtualMachineView.virtualMachine = virtualMachine
+
+
+```
+
+There are a huge number of options for the above, strongly recommended to check the documentation.
+
+# Running a macOS virtual machine
+
+This requires macOS Ventura (macOS 13) on both the host and guest.
+
+In addition to the previous generic configuration, for macOS virtual machines, the following extra configuration is required, in general this is:
+```
+let platform = VZMacPlatformConfiguration()
+
+let hardwareModel = VZMacHardwareModel(dataRepresentation: savedHardwareModel)
+platform.hardwareModel = hardwareModel!
+
+let auxiliaryStorage = VZMacAuxiliaryStorage(contentsOf: auxiliaryStorageURL)
+platform.auxiliaryStorage = auxiliaryStorage
+
+let machineIdentifier = VZMachineIdentifier(dataRepresentation: savedIdentifier)
+platform.machineIdentifier = machineIdentifier
+
+configuration.platform = platform
+
+configuration.bootloader = VZMacOSBootLoader()
+```
+
+I am not sure where we get this missing data. Nor how to actually run this, and this also means we have to restore the image:
+
+So, to actulaly make a compatible configuration, so this specific configuration that we need is:
+
+```
+let restoreImage = try await VZMacOSRestoreImage.latestSupported
+try await download(restoreImage.url)
+
+let requirements = restoreImage.mostFeaturefulSupportedConfiguration
+
+guard let requirements = requirements else {
+  // no compatible configuraiton
+  return
+}
+
+platform.hardwareModel = requirements.hardwareModel
+configuration.cpuCount = requirements.minimumSupportedCPUCount
+configuration.memorySize = requirements.minimumSupportedMemorySize
+// For 3D Acceleration (which exposes Metal!)
+let graphicsConfiguration = VZMacGraphicsdeviceConfiguration()
+graphicsConfiguration.displays = [
+  VZMacGraphicsdeviceConfiguration(widthInPixels: 1920,
+                                   heightInPixels: 1200,
+                                   pixelsPerInch: 80)
+]
+
+configuration.graphicsDevices = [graphicsConfiguration]]
+
+// This allows us to use gestures and the like as we normally can with the host.
+let trackpad = VZMacTrackpadConfiguration()
+configuration.pointingDevices = [trackpad]
+
+// For file sharing
+let sharedDirectory = VZSharedDirectory(url: directoryURL, readOnly: false)
+let share = VZSingleDirectoryShare(directory: sharedDirectory)
+// (We could use a VZMultipleDirectoryShare instead if we wanted)
+let tag = VZVirtioFileSystemDeviceConfiguration.macOSGuestAutomountTag
+let sharingDevice = VZVirtioFileSystemDeviceConfiguration(tag: tag)
+sharingDevice.share = share
+configuration.directorySharingDevices = [sharingDevice]
+
+let virtualMachine = VZVirtualMachine(configuration: configuration)
+let installer = VZMacOSInstaller(virtualMachine: virtualMachine,
+                                 restoringFromImageAt: imageURL)
+try await installer.install()
+```
+
+# Demo - macOS
+
+Putting it together in a demo, from the screenshots, it looks like this is done in XCode 14:
+
+```
+class AppDelegate: NSObject, NSApplicationDelegate {
+  private func applicationDidFinishLaunching(_ aNotification: Notification) {
+    ...  The previously mentioned configuration and the actual launch ...
+    ... startVitualMachine(configuration) ...
+  }
+}
+```
+
+# Virtualising Linux
+
+This has been (mostly) supported since Big Sur, although EFI is new to macOS Ventura.
+
+```
+let diskImageURL = URL(fileURLWithPath: "linux.iso")
+let attachment = try! VZDiskImageStoragDeviceAttachment(url: diskImageUrl, readOnly: true)
+let usbDeviceConfiguration = VZUSBMassStorageDeviceConfiguration(attachment: attachment)
+
+configuration.storageDevices = [usbDeviceConfiguration, createBlockDevice()]
+let efi = VZEFIBootLoader()
+efi.variableStore = VZEFIVariableStore(creatingVariableStoreAt: storeURL,
+                                       options: [])
+configuration.bootLoader = efi
+```
+
+macOS Ventua has new support for "Virtio GPU 2D", which is used for linux VM's (As opposed to "Mac Graphics").  It is a paravirtualised device that allows showing the graphics context on the host.
+
+```
+let virtioGPU = VZVirtioGraphicsDeviceConfiguration()
+virtioGPU.scanouts = [
+  VZVirtioGraphicsScanoutConfiguration(widthInPixels: 1280, heightInPixels: 720)
+]
+
+configuraiton.graphicsDevices = [virtioGPU]
+```
+
+In the example app the video now shows, there are a some new additions:
+
+```
+configuration.keyboards = [VZUSBKeyboardConfiguration()]
+configuration.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
+```
+
+# x86-64 stuff
+
+This is really interesting. It appears that when using ARM linux, we now have the ability to run x86-64 binaries, which I think means AMD64 linux binaries, within ARM linux, via rosetta2 on the mac.
+
+So it's not running x86 linux, it's running ARM linux, but it is able to permit linux access to Rosetta2 for these binaries, as follows:
+
+```
+let rosettaDirectoryShare = try! VZLinuxRosettaDirectoryShare()
+let directorySharingDevice = VZVirtioFileSystemDeviceConfiguration(tag: "RosettaShare")
+directorySharingDevice.share = rosettaDirectoryShare
+
+configuration.directorySharingDevices = [directorySharingDevice]
+```
+
+And for the rosetta2 use by linux itself, it's done using binfmts:
+
+```
+$ mount -t virtiofs RosettaShare /mnt/Rosetta
+$ sudo /usr/sbin/update-binfmts --install rosetta /mnt/Rosetta/rosetta \
+  --magic "\x7f#LF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00" \
+  --mask "\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff" \
+  --credentials yes --preserve no --fix-binary yes
+```
+
+That command in the documentation
+
+# Resources
+
+For this, it's all in the video, the video has links to code, documentation, etc:
+
+=> https://developer.apple.com/wwdc22/10002 Create macOS or Linux virtual machines

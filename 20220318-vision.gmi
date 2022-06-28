@@ -1,0 +1,58 @@
+# Setting up Vision on macOS
+
+The goal is to explore a possible approach for tracking in VR, this page only covers the really high level details, it's not a complete tutorial by any stretch.
+
+The outcome, however, is that while the tracking is fast enough, and surprisingly, accurate enough in terms of positioning, the occlusion issues are so bad it can't be used.
+
+This is documented on apple's website at the following link:
+
+=> https://developer.apple.com/documentation/vision/recognizing_objects_in_live_capture Recognizing Objects in Live Capture
+
+In addition, the following video, whilst a bit slow, is really significant:
+
+=> https://developer.apple.com/videos/play/wwdc2021/10040 Detect people, faces, and poses using Vision
+
+# Requirements
+
+* iOS 12 or higher (or iPad)
+* A really freaking fast CPU, such as that on the iPhone Xs.  The iPhone 7 works, but it is 10 times slower.
+
+# Process.
+
+It's actually pretty simple to follow through the documentation, though it is out of date and it does assume you're well familiar with UIKit and CALayers.
+
+Major points:
+
+We no-longer require the use of turicreate to create models, which is a good thing, because it appears that turicreate is difficult to set up on M1 macs now - it requires a python no-newer than 3.8, which is already a little old, and it requires x86 builds. Use CoreML2 instead at:
+
+=> https://codeburst.io/create-own-ml-model-using-coreml2-86dadbe3528e Create Own ML Model using CoreML 2
+
+Obviously, don't name your sample project "Vision".
+
+# Configuring Vision requests
+
+Vision works on the basis of creating 'requests' which are then submitted to vision 'requestHandler', as an example:
+
+```
+let request = VNGeneratePersonSegmentationRequest()
+request.revision = ...
+request.qualityLevel = ...
+request.outputPixelFormat = ...
+
+let handler = VNImageRequestHandler(url: imageUrl, options: options)
+try handler.perform([request])
+```
+
+The default quality level is "accurate", which can't be used for live editing. (Not sure what live editing means here, however I gather that it must be too slow for live streaming).
+
+For human poses, however, use the appropriate HumanPoseDetection requesst.
+
+# Other intriguing links:
+
+=> https://pterneas.com/2020/04/30/body-tracking-arkit-lidar/ Body Tracking using ARKit and LiDAR (Abandoned?)
+
+# Things to look at next:
+
+Perhaps go non-apple?
+
+
